@@ -5,6 +5,7 @@ if 'start_clicked' not in st.session_state:
 def reset():
     st.session_state.start_clicked = False
 pontos = {"hidratação": 0, "nutrição": 0, "reconstrução": 0}
+etapas = [etapa_tipo_cabelo, etapa_estado_cabelo, etapa_habitos, etapa_objetivo, etapa_orcamento]
 if not st.session_state.start_clicked:
     st.title("🌸 HairBloom - Seu Cronograma Capilar Personalizado")
     st.write("""
@@ -20,4 +21,6 @@ else:
         pontos["nutrição"] += 1
     if st.button("Voltar"):
         reset()
+        
+        
 
