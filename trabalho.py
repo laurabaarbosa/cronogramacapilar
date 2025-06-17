@@ -2,21 +2,21 @@ import streamlit as st
 
 st.set_page_config(page_title="HairBloom", layout="centered")
 
+# Verificar se houve reset via query params
+query_params = st.query_params
+if "reset" in query_params:
+    # Limpar tudo do session state
+    st.session_state.clear()
+    # Limpar os query params
+    st.query_params.clear()
+
 # Inicializar estados
 if 'start_clicked' not in st.session_state:
     st.session_state.start_clicked = False
-if 'reset_counter' not in st.session_state:
-    st.session_state.reset_counter = 0
 
 def reset():
-    # Limpa TODOS os estados relacionados
-    keys_to_delete = [key for key in st.session_state.keys() if key not in ['reset_counter']]
-    for key in keys_to_delete:
-        del st.session_state[key]
-    
-    # Incrementa contador para forçar recriação dos widgets
-    st.session_state.reset_counter += 1
-    st.session_state.start_clicked = False
+    # Usar query parameters para forçar reset completo
+    st.query_params["reset"] = "true"
     st.rerun()
 
 def calcular_pontos(textura, espessura, oleosidade, quimica, estado, frequencia, calor, objetivo):
@@ -86,151 +86,139 @@ def calcular_pontos(textura, espessura, oleosidade, quimica, estado, frequencia,
     
     return pontos
 
-# Usar o reset_counter para criar chaves únicas
-key_suffix = st.session_state.reset_counter
-
 if not st.session_state.start_clicked:
     st.title("🌸 HairBloom - Seu Cronograma Capilar Personalizado")
     st.write("Bem Vinda(o) ao HairBloom! Seu Cabelo, Seu Fio, Seu Cronograma.")
-    if st.button("Começar", key=f"start_{key_suffix}"):
+    if st.button("Começar"):
         st.session_state.start_clicked = True
         st.rerun()
 
 else:
-    st.header("Primeira Etapa: Descobrir Seu Tipo de Cabelo!")
+    # Container principal para o formulário
+    with st.form("hair_form", clear_on_submit=False):
+        st.header("Primeira Etapa: Descobrir Seu Tipo de Cabelo!")
+        
+        textura = st.radio(
+            "Qual a textura do seu cabelo?", 
+            ["Liso", "Ondulado", "Cacheado", "Crespo"]
+        )
+        
+        espessura = st.radio(
+            "Qual a espessura dos seus fios?", 
+            ["Finos", "Médios", "Grossos"]
+        ) 
+        
+        oleosidade = st.radio(
+            "Qual o nível de oleosidade do seu cabelo?", 
+            ["Oleoso", "Seco", "Misto", "Normal"]
+        )
+        
+        quimica = st.radio(
+            "Você tem química no cabelo?", 
+            ["Sim", "Não"]
+        ) 
+        
+        st.header("Segunda Etapa: Entender o Estado do Seu Cabelo")
+        estado = st.multiselect(
+            "Selecione os sintomas que você percebe:", 
+            [
+                "Opaco e sem brilho",
+                "Embaraça fácil ou com frizz",
+                "Quebradiço, pontas ralas", 
+                "Caindo ou quebrando com facilidade", 
+                "Elástico ao molhar"
+            ]
+        )
+        
+        st.header("Terceira Etapa: Seus Hábitos")
+        frequencia = st.radio(
+            "Com que frequência você lava seu cabelo?", 
+            ["Todos os dias", "Dia sim Dia não", "2 a 3 vezes por semana", "1 vez por semana"]
+        ) 
+        
+        calor = st.radio(
+            "Você usa fontes de calor? (chapinha, secador, babyliss)?", 
+            ["Todos os dias", "Algumas vezes por semana", "Raramente", "Nunca"]
+        ) 
+        
+        st.header("Quarta Etapa: Seu Objetivo")
+        objetivo = st.multiselect(
+            "Selecione os seus objetivos com o tratamento:",
+            [
+                "Hidratar e dar brilho", 
+                "Reduzir o frizz",
+                "Recuperar cabelo danificado",
+                "Fortalecer e evitar quebra", 
+                "Estimular crescimento",
+                "Definir cachos"
+            ]
+        )
+        
+        st.header("Quinta Etapa: Orçamento") 
+        orcamento = st.radio(
+            "Até quanto você está disposto a investir no tratamento?", 
+            ["Até R$ 100", "Entre R$ 100 e R$ 500", "Entre R$ 500 e R$ 1.000", "Mais de R$ 1.000"]
+        )
+        
+        # Botão de submit do formulário
+        submitted = st.form_submit_button("📋 Gerar Cronograma", type="primary", use_container_width=True)
     
-    textura = st.radio(
-        "Qual a textura do seu cabelo?", 
-        ["Liso", "Ondulado", "Cacheado", "Crespo"],
-        key=f"textura_{key_suffix}",
-        index=0
-    )
-    
-    espessura = st.radio(
-        "Qual a espessura dos seus fios?", 
-        ["Finos", "Médios", "Grossos"],
-        key=f"espessura_{key_suffix}",
-        index=0
-    ) 
-    
-    oleosidade = st.radio(
-        "Qual o nível de oleosidade do seu cabelo?", 
-        ["Oleoso", "Seco", "Misto", "Normal"],
-        key=f"oleosidade_{key_suffix}",
-        index=0
-    )
-    
-    quimica = st.radio(
-        "Você tem química no cabelo?", 
-        ["Sim", "Não"],
-        key=f"quimica_{key_suffix}",
-        index=0
-    ) 
-    
-    st.header("Segunda Etapa: Entender o Estado do Seu Cabelo")
-    estado = st.multiselect(
-        "Selecione os sintomas que você percebe:", 
-        [
-            "Opaco e sem brilho",
-            "Embaraça fácil ou com frizz",
-            "Quebradiço, pontas ralas", 
-            "Caindo ou quebrando com facilidade", 
-            "Elástico ao molhar"
-        ],
-        key=f"estado_{key_suffix}",
-        default=[]
-    )
-    
-    st.header("Terceira Etapa: Seus Hábitos")
-    frequencia = st.radio(
-        "Com que frequência você lava seu cabelo?", 
-        ["Todos os dias", "Dia sim Dia não", "2 a 3 vezes por semana", "1 vez por semana"],
-        key=f"frequencia_{key_suffix}",
-        index=0
-    ) 
-    
-    calor = st.radio(
-        "Você usa fontes de calor? (chapinha, secador, babyliss)?", 
-        ["Todos os dias", "Algumas vezes por semana", "Raramente", "Nunca"],
-        key=f"calor_{key_suffix}",
-        index=0
-    ) 
-    
-    st.header("Quarta Etapa: Seu Objetivo")
-    objetivo = st.multiselect(
-        "Selecione os seus objetivos com o tratamento:",
-        [
-            "Hidratar e dar brilho", 
-            "Reduzir o frizz",
-            "Recuperar cabelo danificado",
-            "Fortalecer e evitar quebra", 
-            "Estimular crescimento",
-            "Definir cachos"
-        ],
-        key=f"objetivo_{key_suffix}",
-        default=[]
-    )
-    
-    st.header("Quinta Etapa: Orçamento") 
-    orcamento = st.radio(
-        "Até quanto você está disposto a investir no tratamento?", 
-        ["Até R$ 100", "Entre R$ 100 e R$ 500", "Entre R$ 500 e R$ 1.000", "Mais de R$ 1.000"],
-        key=f"orcamento_{key_suffix}",
-        index=0
-    )
-    
-    # Calcular pontos apenas uma vez baseado nas respostas atuais
-    pontos_calculados = calcular_pontos(textura, espessura, oleosidade, quimica, estado, frequencia, calor, objetivo)
-    
-    produtos = { 
-        "hidratação": {
-            "baixo": ["Máscara Skala Babosa", "Yamasterol Hidratação"],
-            "medio": ["Lola Dream Cream", "Aussie Hidratação"],
-            "alto": ["Kérastase Nutritive", "Moroccanoil Hydrating"] 
-        },
-        "nutrição": {
-            "baixo": ["Óleo de coco Salon Line", "Skala Óleo de Rícino"], 
-            "medio": ["Elseve Óleo Extraordinário", "Novex Óleo de Argan"],
-            "alto": ["L'Oréal Absolut Repair", "Kérastase Elixir Ultime"]
-        },
-        "reconstrução": {
-            "baixo": ["Gota Dourada Queratina", "Novex Queratina"],
-            "medio": ["Lola Argan Oil", "Aussie Reconstructor"], 
-            "alto": ["Joico K-Pak", "Kérastase Resistance"] 
+    # Só mostra resultados se o formulário foi submetido
+    if submitted:
+        # Calcular pontos baseado nas respostas
+        pontos_calculados = calcular_pontos(textura, espessura, oleosidade, quimica, estado, frequencia, calor, objetivo)
+        
+        produtos = { 
+            "hidratação": {
+                "baixo": ["Máscara Skala Babosa", "Yamasterol Hidratação"],
+                "medio": ["Lola Dream Cream", "Aussie Hidratação"],
+                "alto": ["Kérastase Nutritive", "Moroccanoil Hydrating"] 
+            },
+            "nutrição": {
+                "baixo": ["Óleo de coco Salon Line", "Skala Óleo de Rícino"], 
+                "medio": ["Elseve Óleo Extraordinário", "Novex Óleo de Argan"],
+                "alto": ["L'Oréal Absolut Repair", "Kérastase Elixir Ultime"]
+            },
+            "reconstrução": {
+                "baixo": ["Gota Dourada Queratina", "Novex Queratina"],
+                "medio": ["Lola Argan Oil", "Aussie Reconstructor"], 
+                "alto": ["Joico K-Pak", "Kérastase Resistance"] 
+            }
         }
-    }
+        
+        if orcamento == "Até R$ 100":
+            faixa = "baixo"
+        elif orcamento == "Entre R$ 100 e R$ 500": 
+            faixa = "medio"
+        else: 
+            faixa = "alto"
+        
+        st.divider()
+        st.header("✨ Resultado do Seu Cronograma Personalizado") 
+        
+        etapas_ordenadas = sorted(pontos_calculados.items(), key=lambda x: x[1], reverse=True) 
+        
+        st.subheader("🎯 Prioridades do seu cabelo:") 
+        for etapa, valor in etapas_ordenadas: 
+            st.write(f"**{etapa.capitalize()}:** {valor} ponto(s)") 
+        
+        dias = ["Segunda", "Quarta", "Sexta"] 
+        cronograma = {dia: etapas_ordenadas[i % 3][0] for i, dia in enumerate(dias)} 
+        
+        st.subheader("📅 Cronograma Capilar Semanal:") 
+        for dia, etapa in cronograma.items(): 
+            st.write(f"**{dia}:** {etapa.capitalize()}") 
+        
+        st.subheader("🛍️ Produtos Recomendados:") 
+        for etapa in ["hidratação", "nutrição", "reconstrução"]: 
+            st.write(f"**{etapa.capitalize()}:**")
+            for produto in produtos[etapa][faixa]: 
+                st.write(f"• {produto}") 
+            st.write("")  # Linha em branco para separar
     
-    if orcamento == "Até R$ 100":
-        faixa = "baixo"
-    elif orcamento == "Entre R$ 100 e R$ 500": 
-        faixa = "medio"
-    else: 
-        faixa = "alto"
-    
-    st.header("Resultado do Seu Cronograma Personalizado") 
-    
-    etapas_ordenadas = sorted(pontos_calculados.items(), key=lambda x: x[1], reverse=True) 
-    
-    st.subheader("Prioridades do seu cabelo:") 
-    for etapa, valor in etapas_ordenadas: 
-        st.write(f"**{etapa.capitalize()}:** {valor} ponto(s)") 
-    
-    dias = ["Segunda", "Quarta", "Sexta"] 
-    cronograma = {dia: etapas_ordenadas[i % 3][0] for i, dia in enumerate(dias)} 
-    
-    st.subheader("Cronograma Capilar Semanal:") 
-    for dia, etapa in cronograma.items(): 
-        st.write(f"**{dia}:** {etapa.capitalize()}") 
-    
-    st.subheader("Produtos Recomendados:") 
-    for etapa in ["hidratação", "nutrição", "reconstrução"]: 
-        st.write(f"**{etapa.capitalize()}:**")
-        for produto in produtos[etapa][faixa]: 
-            st.write(f"• {produto}") 
-        st.write("")  # Linha em branco para separar
-    
+    # Botão de reset sempre visível
     st.divider()
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
-        if st.button("🔄 Recomeçar", key=f"restart_{key_suffix}", type="primary", use_container_width=True):
+        if st.button("🔄 Recomeçar", type="secondary", use_container_width=True):
             reset()
