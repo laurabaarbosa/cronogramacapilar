@@ -227,8 +227,9 @@ else:
             etapas_ordenadas = sorted(pontos_calculados.items(), key=lambda x: x[1], reverse=True) 
             
             st.subheader("🎯 Prioridades do seu cabelo:") 
-            for etapa, valor in etapas_ordenadas: 
-                st.write(f"**{etapa.capitalize()}:** {valor} ponto(s)") 
+            prioridades = ["1º", "2º", "3º"]
+            for i, (etapa, valor) in enumerate(etapas_ordenadas): 
+                st.write(f"**{prioridades[i]} - {etapa.capitalize()}**") 
             
             dias = ["Segunda", "Quarta", "Sexta"] 
             cronograma = {dia: etapas_ordenadas[i % 3][0] for i, dia in enumerate(dias)} 
