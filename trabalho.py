@@ -5,16 +5,19 @@ st.set_page_config(page_title="HairBloom", layout="centered")
 # Inicializar estados
 if 'start_clicked' not in st.session_state:
     st.session_state.start_clicked = False
-if 'pontos' not in st.session_state:
-    st.session_state.pontos = {"hidratação": 0, "nutrição": 0, "reconstrução": 0}
-if 'widget_key' not in st.session_state:
-    st.session_state.widget_key = 0
+if 'reset_counter' not in st.session_state:
+    st.session_state.reset_counter = 0
 
 def reset():
+    # Limpa TODOS os estados relacionados
+    keys_to_delete = [key for key in st.session_state.keys() if key not in ['reset_counter']]
+    for key in keys_to_delete:
+        del st.session_state[key]
+    
+    # Incrementa contador para forçar recriação dos widgets
+    st.session_state.reset_counter += 1
     st.session_state.start_clicked = False
-    st.session_state.pontos = {"hidratação": 0, "nutrição": 0, "reconstrução": 0}
-    st.session_state.widget_key += 1  # Incrementa para forçar recriação dos widgets
-    st.rerun()  # Força o reload da página
+    st.rerun()
 
 def calcular_pontos(textura, espessura, oleosidade, quimica, estado, frequencia, calor, objetivo):
     """Calcula os pontos baseado nas respostas"""
@@ -83,10 +86,13 @@ def calcular_pontos(textura, espessura, oleosidade, quimica, estado, frequencia,
     
     return pontos
 
+# Usar o reset_counter para criar chaves únicas
+key_suffix = st.session_state.reset_counter
+
 if not st.session_state.start_clicked:
     st.title("🌸 HairBloom - Seu Cronograma Capilar Personalizado")
     st.write("Bem Vinda(o) ao HairBloom! Seu Cabelo, Seu Fio, Seu Cronograma.")
-    if st.button("Começar"):
+    if st.button("Começar", key=f"start_{key_suffix}"):
         st.session_state.start_clicked = True
         st.rerun()
 
@@ -96,25 +102,29 @@ else:
     textura = st.radio(
         "Qual a textura do seu cabelo?", 
         ["Liso", "Ondulado", "Cacheado", "Crespo"],
-        key=f"textura_{st.session_state.widget_key}"
+        key=f"textura_{key_suffix}",
+        index=0
     )
     
     espessura = st.radio(
         "Qual a espessura dos seus fios?", 
         ["Finos", "Médios", "Grossos"],
-        key=f"espessura_{st.session_state.widget_key}"
+        key=f"espessura_{key_suffix}",
+        index=0
     ) 
     
     oleosidade = st.radio(
         "Qual o nível de oleosidade do seu cabelo?", 
         ["Oleoso", "Seco", "Misto", "Normal"],
-        key=f"oleosidade_{st.session_state.widget_key}"
+        key=f"oleosidade_{key_suffix}",
+        index=0
     )
     
     quimica = st.radio(
         "Você tem química no cabelo?", 
         ["Sim", "Não"],
-        key=f"quimica_{st.session_state.widget_key}"
+        key=f"quimica_{key_suffix}",
+        index=0
     ) 
     
     st.header("Segunda Etapa: Entender o Estado do Seu Cabelo")
@@ -127,20 +137,23 @@ else:
             "Caindo ou quebrando com facilidade", 
             "Elástico ao molhar"
         ],
-        key=f"estado_{st.session_state.widget_key}"
+        key=f"estado_{key_suffix}",
+        default=[]
     )
     
     st.header("Terceira Etapa: Seus Hábitos")
     frequencia = st.radio(
         "Com que frequência você lava seu cabelo?", 
         ["Todos os dias", "Dia sim Dia não", "2 a 3 vezes por semana", "1 vez por semana"],
-        key=f"frequencia_{st.session_state.widget_key}"
+        key=f"frequencia_{key_suffix}",
+        index=0
     ) 
     
     calor = st.radio(
         "Você usa fontes de calor? (chapinha, secador, babyliss)?", 
         ["Todos os dias", "Algumas vezes por semana", "Raramente", "Nunca"],
-        key=f"calor_{st.session_state.widget_key}"
+        key=f"calor_{key_suffix}",
+        index=0
     ) 
     
     st.header("Quarta Etapa: Seu Objetivo")
@@ -154,14 +167,16 @@ else:
             "Estimular crescimento",
             "Definir cachos"
         ],
-        key=f"objetivo_{st.session_state.widget_key}"
+        key=f"objetivo_{key_suffix}",
+        default=[]
     )
     
     st.header("Quinta Etapa: Orçamento") 
     orcamento = st.radio(
         "Até quanto você está disposto a investir no tratamento?", 
-        ["Até R$ 100,00", "Entre R$ 100,00 e R$ 500,00", "Entre R$ 500,00 e R$ 1.000,00", "Mais de R$ 1.000,00"],
-        key=f"orcamento_{st.session_state.widget_key}"
+        ["Até R$ 100", "Entre R$ 100 e R$ 500", "Entre R$ 500 e R$ 1.000", "Mais de R$ 1.000"],
+        key=f"orcamento_{key_suffix}",
+        index=0
     )
     
     # Calcular pontos apenas uma vez baseado nas respostas atuais
@@ -185,9 +200,9 @@ else:
         }
     }
     
-    if orcamento == "Até R$ 100,00":
+    if orcamento == "Até R$ 100":
         faixa = "baixo"
-    elif orcamento == "Entre R$ 100,00 e R$ 500,00": 
+    elif orcamento == "Entre R$ 100 e R$ 500": 
         faixa = "medio"
     else: 
         faixa = "alto"
@@ -198,21 +213,24 @@ else:
     
     st.subheader("Prioridades do seu cabelo:") 
     for etapa, valor in etapas_ordenadas: 
-        st.write(f"{etapa.capitalize()}: {valor} ponto(s)") 
+        st.write(f"**{etapa.capitalize()}:** {valor} ponto(s)") 
     
     dias = ["Segunda", "Quarta", "Sexta"] 
     cronograma = {dia: etapas_ordenadas[i % 3][0] for i, dia in enumerate(dias)} 
     
     st.subheader("Cronograma Capilar Semanal:") 
     for dia, etapa in cronograma.items(): 
-        st.write(f"{dia}: {etapa.capitalize()}") 
+        st.write(f"**{dia}:** {etapa.capitalize()}") 
     
     st.subheader("Produtos Recomendados:") 
     for etapa in ["hidratação", "nutrição", "reconstrução"]: 
         st.write(f"**{etapa.capitalize()}:**")
         for produto in produtos[etapa][faixa]: 
             st.write(f"• {produto}") 
+        st.write("")  # Linha em branco para separar
     
     st.divider()
-    if st.button("Recomeçar", type="primary"):
-        reset()
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col2:
+        if st.button("🔄 Recomeçar", key=f"restart_{key_suffix}", type="primary", use_container_width=True):
+            reset()
