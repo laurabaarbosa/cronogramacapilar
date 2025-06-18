@@ -2,7 +2,6 @@ import streamlit as st
 
 st.set_page_config(page_title="HairBloom", layout="centered")
 
-# Verificar se houve reset via query params
 query_params = st.query_params
 if "reset" in query_params:
     # Limpar tudo do session state
@@ -10,12 +9,10 @@ if "reset" in query_params:
     # Limpar os query params
     st.query_params.clear()
 
-# Inicializar estados
 if 'start_clicked' not in st.session_state:
     st.session_state.start_clicked = False
 
 def reset():
-    # Usar query parameters para forçar reset completo
     st.query_params["reset"] = "true"
     st.rerun()
 
@@ -23,27 +20,27 @@ def calcular_pontos(textura, espessura, oleosidade, quimica, estado, frequencia,
     """Calcula os pontos baseado nas respostas"""
     pontos = {"hidratação": 0, "nutrição": 0, "reconstrução": 0}
     
-    # Textura
+
     if textura in ["Cacheado", "Crespo"]:
         pontos["nutrição"] += 1
     
-    # Espessura
+  
     if espessura == "Finos":
         pontos["reconstrução"] += 1
     elif espessura == "Grossos": 
         pontos["nutrição"] += 1 
     
-    # Oleosidade
+   
     if oleosidade == "Seco":
         pontos["hidratação"] += 1 
     elif oleosidade == "Oleoso":
         pontos["nutrição"] -= 1 
     
-    # Química
+   
     if quimica == "Sim":
         pontos["reconstrução"] += 2 
     
-    # Estado do cabelo
+  
     if "Opaco e sem brilho" in estado:
         pontos["hidratação"] += 2 
     if "Embaraça fácil ou com frizz" in estado:
@@ -55,20 +52,19 @@ def calcular_pontos(textura, espessura, oleosidade, quimica, estado, frequencia,
     if "Elástico ao molhar" in estado:
         pontos["reconstrução"] += 3
     
-    # Frequência de lavagem
+  
     if frequencia == "Todos os dias":
         pontos["hidratação"] += 2
     elif frequencia == "Dia sim Dia não": 
         pontos["hidratação"] += 1 
     
-    # Uso de calor
+   
     if calor == "Todos os dias":
         pontos["reconstrução"] += 2
         pontos["nutrição"] += 1 
     elif calor == "Algumas vezes por semana":
         pontos["reconstrução"] += 1 
     
-    # Objetivos
     if "Hidratar e dar brilho" in objetivo:
         pontos["hidratação"] += 2
     if "Reduzir o frizz" in objetivo:
@@ -94,7 +90,6 @@ if not st.session_state.start_clicked:
         st.rerun()
 
 else:
-    # Container principal para o formulário
     with st.form("hair_form", clear_on_submit=False):
         st.header("Primeira Etapa: Descobrir Seu Tipo de Cabelo!")
         
@@ -167,10 +162,8 @@ else:
             index=0
         )
         
-        # Botão de submit do formulário
         submitted = st.form_submit_button("📋 Gerar Cronograma", type="primary", use_container_width=True)
     
-    # Validação: verificar se todas as perguntas foram respondidas
     if submitted:
         erros = []
         if textura == "Selecione uma opção":
@@ -193,7 +186,6 @@ else:
             for erro in erros:
                 st.write(f"• {erro}")
         else:
-            # Calcular pontos baseado nas respostas
             pontos_calculados = calcular_pontos(textura, espessura, oleosidade, quimica, estado, frequencia, calor, objetivo)
             
             produtos = { 
@@ -243,9 +235,8 @@ else:
                 st.write(f"**{etapa.capitalize()}:**")
                 for produto in produtos[etapa][faixa]: 
                     st.write(f"• {produto}") 
-                st.write("")  # Linha em branco para separar
+                st.write("")  
     
-    # Botão de reset sempre visível
     st.divider()
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
